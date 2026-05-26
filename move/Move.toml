@@ -1,0 +1,11 @@
+[package]
+name = "walrus_nft_media_vault"
+edition = "2024.beta"
+license = "Apache-2.0"
+authors = ["Walrus NFT Media Vault"]
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
+
+[addresses]
+walrus_nft_media_vault = "0x0"

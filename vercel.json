@@ -1,0 +1,12 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/nft/:path*",
+      "destination": "/nft/preview/index.html"
+    }
+  ]
+}

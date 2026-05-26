@@ -1,0 +1,66 @@
+@import '@mysten/dapp-kit/dist/index.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 6%;
+  --foreground: 190 45% 96%;
+  --card: 224 35% 10%;
+  --card-foreground: 190 45% 96%;
+  --primary: 184 100% 48%;
+  --primary-foreground: 224 50% 6%;
+  --secondary: 320 84% 54%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 224 30% 16%;
+  --muted-foreground: 192 18% 68%;
+  --destructive: 0 72% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 24% 22%;
+  --input: 220 24% 18%;
+  --ring: 184 100% 48%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(0, 210, 255, 0.16), transparent 28rem),
+    radial-gradient(circle at 85% 10%, rgba(255, 42, 170, 0.14), transparent 26rem),
+    linear-gradient(135deg, #05070f 0%, #0c1020 46%, #090b12 100%);
+  color: hsl(var(--foreground));
+}
+
+::selection {
+  background: rgba(0, 210, 255, 0.35);
+}
+
+[data-dapp-kit] {
+  --dapp-kit-backgroundColors-modalPrimary: #09101d;
+  --dapp-kit-backgroundColors-modalSecondary: #101828;
+  --dapp-kit-backgroundColors-modalOverlay: rgba(1, 5, 12, 0.72);
+  --dapp-kit-backgroundColors-walletItemHover: rgba(0, 210, 255, 0.12);
+  --dapp-kit-backgroundColors-walletItemSelected: rgba(0, 210, 255, 0.16);
+  --dapp-kit-colors-body: #e7fbff;
+  --dapp-kit-colors-bodyMuted: #91a8b5;
+  --dapp-kit-colors-primaryButton: #001218;
+  --dapp-kit-backgroundColors-primaryButton: #00d2ff;
+  --dapp-kit-radii-medium: 8px;
+  --dapp-kit-radii-large: 8px;
+  --dapp-kit-typography-letterSpacing: 0;
+}
+
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 210, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+}

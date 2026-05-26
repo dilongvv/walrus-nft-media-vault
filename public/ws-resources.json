@@ -1,0 +1,19 @@
+{
+  "routes": {
+    "/nft/*": "/nft/preview/index.html",
+    "/*": "/index.html"
+  },
+  "headers": {
+    "/_next/static/*": {
+      "cache-control": "public, max-age=31536000, immutable"
+    },
+    "/*": {
+      "cache-control": "public, max-age=60"
+    }
+  },
+  "metadata": {
+    "site_name": "Walrus NFT Media Vault",
+    "description": "Decentralized rich-media NFT storage and display dApp on Walrus and Sui.",
+    "link": "https://wal.app"
+  }
+}
