@@ -13,3 +13,4 @@ move/Published.toml
 *.log
 
 .codex-homepage-screenshot.png
+.vercel
