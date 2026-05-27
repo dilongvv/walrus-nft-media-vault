@@ -56,13 +56,17 @@ Required variables:
 NEXT_PUBLIC_SUI_NETWORK=mainnet
 NEXT_PUBLIC_SUI_RPC_URL=https://fullnode.mainnet.sui.io:443
 NEXT_PUBLIC_SUI_FALLBACK_RPC_URL=https://sui-rpc.publicnode.com
+NEXT_PUBLIC_MAINNET_SUI_RPC_URL=https://fullnode.mainnet.sui.io:443
+NEXT_PUBLIC_MAINNET_SUI_FALLBACK_RPC_URL=https://sui-rpc.publicnode.com
+NEXT_PUBLIC_TESTNET_SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+NEXT_PUBLIC_TESTNET_SUI_FALLBACK_RPC_URL=https://sui-testnet-rpc.publicnode.com
 NEXT_PUBLIC_MAINNET_WALRUS_PUBLISHER_URL=https://upload-relay.mainnet.walrus.space
 NEXT_PUBLIC_TESTNET_WALRUS_PUBLISHER_URL=https://upload-relay.testnet.walrus.space
 NEXT_PUBLIC_MAINNET_PACKAGE_ID=
 NEXT_PUBLIC_TESTNET_PACKAGE_ID=
 ```
 
-The app defaults to `mainnet`, and the top-right network switcher selects the matching package id and Walrus relay at runtime.
+The app defaults to `mainnet`, and the top-right network switcher selects the matching package id, RPC endpoint, and Walrus relay at runtime.
 
 ## Install And Run
 
@@ -159,7 +163,7 @@ After the GitHub repository is connected, Vercel becomes the primary deployment 
 
 - Package ID not configured: publish the Move package and set the package id for the selected network.
 - Wallet rejects signing: retry the upload or mint action; no partial app state is trusted.
-- RPC unavailable: the query layer retries and falls back to `NEXT_PUBLIC_SUI_FALLBACK_RPC_URL`.
+- RPC unavailable: the query layer retries and falls back to the network-specific fallback RPC when configured, otherwise `NEXT_PUBLIC_SUI_FALLBACK_RPC_URL`.
 - Gas insufficient: request testnet SUI from the faucet and retry.
 - Unsupported file: only `image/*`, `video/*`, `audio/*`, `model/gltf-binary`, and `model/gltf+json` are accepted.
 - File too large: the browser rejects files above 50MB.
