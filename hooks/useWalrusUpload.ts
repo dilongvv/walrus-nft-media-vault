@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { WALRUS_EPOCHS, createWalrusClient, createWalrusFile } from '@/lib/walrus';
-import { getWalAppLink, getWalrusBlobUrl, logDebug, normalizeError, sha256Hex, validateMediaFile, getMediaKind } from '@/lib/utils';
+import { getWalrusBlobUrl, getWalrusFileUrl, logDebug, normalizeError, sha256Hex, validateMediaFile, getMediaKind } from '@/lib/utils';
 import type { UploadedMedia, UploadProgress } from '@/types/nft';
 import { useWalletNetwork } from '@/hooks/useWalletNetwork';
 
@@ -67,14 +67,26 @@ export function useWalrusUpload() {
       });
       logDebug('walrus', 'certify transaction signed', certifyResult);
 
-      const [storedFile] = await flow.listFiles();
+      const [storedFile] = await flow.listFiles() as Array<{ blobId?: string; id?: string }>;
       if (!storedFile) {
         throw new Error('Walrus upload completed without a file reference.');
       }
 
+      const blobId = storedFile.blobId;
+      if (!blobId) {
+        throw new Error('Walrus upload completed without a blob ID.');
+      }
+
       const uploaded: UploadedMedia = {
-        blobId: storedFile.blobId,
-        walrusUrl: getWalrusBlobUrl(storedFile.blobId, network),
+        blobId,
+        quiltId: storedFile.id,
+        walrusUrl: getWalrusFileUrl({
+          blobId,
+          quiltId: storedFile.id,
+          fileName: file.name,
+          network
+        }),
+        blobWalrusUrl: getWalrusBlobUrl(blobId, network),
         size: file.size,
         mimeType: file.type,
         fileHash,
@@ -84,7 +96,7 @@ export function useWalrusUpload() {
 
       setProgress({ phase: 'complete', percent: 100, message: 'Upload complete' });
       toast.success('Walrus upload complete', {
-        description: getWalAppLink(uploaded.blobId)
+        description: uploaded.walrusUrl
       });
       return uploaded;
     },

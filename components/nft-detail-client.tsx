@@ -68,13 +68,21 @@ export function NFTDetailClient({ objectId: providedObjectId }: { objectId?: str
                 <p className="text-sm text-muted-foreground">{data.description}</p>
                 <Meta label="NFT Object ID" value={data.objectId} />
                 <Meta label="Blob ID" value={data.imageBlobId} />
+                <Meta label="Walrus URL" value={data.walrusUrl} />
                 <Meta label="MIME type" value={data.mediaType} />
                 <Meta label="File hash" value={data.fileHash} />
                 <Meta label="Created" value={new Date(data.createdAt).toLocaleString()} />
                 <div className="flex flex-wrap gap-2">
                   <CopyButton value={data.objectId} label="Copy Object" />
                   <CopyButton value={data.imageBlobId} label="Copy Blob" />
+                  <CopyButton value={data.walrusUrl} label="Copy Media URL" />
                   {shareUrl ? <CopyButton value={shareUrl} label="Copy Share" /> : null}
+                  <Button asChild variant="secondary" size="sm">
+                    <a href={data.walrusUrl} target="_blank" rel="noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                      Open media
+                    </a>
+                  </Button>
                   <Button asChild variant="outline" size="sm">
                     <a href={getWalAppLink(data.imageBlobId)} target="_blank" rel="noreferrer">
                       <ExternalLink className="h-4 w-4" />

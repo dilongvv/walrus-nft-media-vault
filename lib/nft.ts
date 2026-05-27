@@ -1,5 +1,5 @@
 import { NFT_MODULE, NFT_STRUCT, type SuiNetwork } from '@/constants/config';
-import { getMediaKind, getWalrusBlobUrl } from '@/lib/utils';
+import { getMediaKind, getWalrusBlobUrl, getWalrusFileUrl } from '@/lib/utils';
 import type { LocalMintRecord, VaultNFT } from '@/types/nft';
 
 interface MoveObjectContent {
@@ -51,7 +51,12 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
       createdAt: record.createdAt,
       fileHash: record.fileHash,
       mediaKind: getMediaKind(record.mediaType),
-      walrusUrl: getWalrusBlobUrl(record.blobId, record.network),
+      walrusUrl: getWalrusFileUrl({
+        blobId: record.blobId,
+        quiltId: record.quiltId,
+        fileName: record.fileName,
+        network: record.network
+      }),
       digest: record.digest
     }));
 

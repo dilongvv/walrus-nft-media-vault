@@ -25,7 +25,9 @@ export function MintPanel({ uploaded }: { uploaded?: UploadedMedia }) {
       description,
       imageBlobId: uploaded.blobId,
       mediaType: uploaded.mimeType,
-      fileHash: uploaded.fileHash
+      fileHash: uploaded.fileHash,
+      quiltId: uploaded.quiltId,
+      fileName: uploaded.fileName
     });
     setLastMint(result);
   }

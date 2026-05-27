@@ -92,6 +92,24 @@ export function getWalrusBlobUrl(blobId: string, network: SuiNetwork = getConfig
   return `${WALRUS_AGGREGATOR_BY_NETWORK[network]}/v1/blobs/${blobId}`;
 }
 
+export function getWalrusFileUrl({
+  network = getConfiguredNetwork(),
+  blobId,
+  quiltId,
+  fileName
+}: {
+  network?: SuiNetwork;
+  blobId: string;
+  quiltId?: string;
+  fileName?: string;
+}): string {
+  if (quiltId && fileName) {
+    return `${WALRUS_AGGREGATOR_BY_NETWORK[network]}/v1/blobs/by-quilt-id/${quiltId}/${encodeURIComponent(fileName)}`;
+  }
+
+  return getWalrusBlobUrl(blobId, network);
+}
+
 export function getWalAppLink(blobId: string): string {
   return `https://wal.app/blob/${blobId}`;
 }

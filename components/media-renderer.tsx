@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import { useMemo } from 'react';
 import type { MediaKind } from '@/types/nft';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +16,8 @@ export function MediaRenderer({ src, mimeType, kind, title }: { src: string; mim
   if (kind === 'image') {
     return (
       <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black/40">
-        <Image src={cacheBustedSrc} alt={title} fill sizes="(max-width: 768px) 100vw, 900px" className="object-contain" loading="lazy" unoptimized />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={cacheBustedSrc} alt={title} className="h-full w-full object-contain" loading="lazy" />
       </div>
     );
   }

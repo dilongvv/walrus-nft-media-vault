@@ -64,7 +64,9 @@ export function useMintNFT() {
         fileHash: input.fileHash,
         mediaType: input.mediaType,
         network,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        quiltId: input.quiltId,
+        fileName: input.fileName
       });
       await queryClient.invalidateQueries({ queryKey: ['owned-nfts', account.address, network, packageId] });
       toast.success('NFT minted', { description: objectId });

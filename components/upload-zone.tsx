@@ -1,8 +1,9 @@
 'use client';
 
-import { UploadCloud, FileCheck2, Link2, Hash } from 'lucide-react';
+import { UploadCloud, FileCheck2, Link2, Hash, ExternalLink } from 'lucide-react';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { MediaRenderer } from '@/components/media-renderer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -75,12 +76,32 @@ export function UploadZone({
         </div>
 
         {uploaded ? (
-          <div className="grid gap-3 rounded-lg border border-white/10 bg-black/20 p-4 text-sm sm:grid-cols-2">
-            <Info icon={<FileCheck2 className="h-4 w-4" />} label="Blob ID" value={uploaded.blobId} />
-            <Info icon={<Link2 className="h-4 w-4" />} label="wal.app" value={getWalAppLink(uploaded.blobId)} />
-            <Info label="Size" value={formatBytes(uploaded.size)} />
-            <Info label="MIME" value={uploaded.mimeType} />
-            <Info icon={<Hash className="h-4 w-4" />} label="SHA-256" value={uploaded.fileHash} wide />
+          <div className="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4 text-sm">
+            <MediaRenderer src={uploaded.walrusUrl} mimeType={uploaded.mimeType} kind={uploaded.mediaKind} title={uploaded.fileName} />
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="secondary">
+                <a href={uploaded.walrusUrl} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  Open media
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <a href={uploaded.blobWalrusUrl} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  Open blob
+                </a>
+              </Button>
+            </div>
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Blob ID" value={uploaded.blobId} />
+              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Quilt ID" value={uploaded.quiltId || 'N/A'} />
+              <Info icon={<Link2 className="h-4 w-4" />} label="Media URL" value={uploaded.walrusUrl} wide />
+              <Info icon={<Link2 className="h-4 w-4" />} label="Blob URL" value={uploaded.blobWalrusUrl} wide />
+              <Info icon={<Link2 className="h-4 w-4" />} label="wal.app" value={getWalAppLink(uploaded.blobId)} />
+              <Info label="Size" value={formatBytes(uploaded.size)} />
+              <Info label="MIME" value={uploaded.mimeType} />
+              <Info icon={<Hash className="h-4 w-4" />} label="SHA-256" value={uploaded.fileHash} wide />
+            </div>
           </div>
         ) : null}
       </CardContent>
