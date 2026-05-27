@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { ACCEPTED_MIME_TYPES, DEFAULT_NETWORK, MAX_FILE_SIZE_BYTES, WALRUS_AGGREGATOR_BY_NETWORK, WALRUS_UPLOAD_RELAY_BY_NETWORK, type SuiNetwork } from '@/constants/config';
+import { ACCEPTED_MIME_TYPES, DEFAULT_NETWORK, LEGACY_PACKAGE_IDS_BY_NETWORK, MAX_FILE_SIZE_BYTES, WALRUS_AGGREGATOR_BY_NETWORK, WALRUS_UPLOAD_RELAY_BY_NETWORK, type SuiNetwork } from '@/constants/config';
 import type { MediaKind } from '@/types/nft';
 
 export function cn(...inputs: ClassValue[]): string {
@@ -30,6 +30,16 @@ export function getPackageIdForNetwork(network: SuiNetwork): string {
 
   const legacy = process.env.NEXT_PUBLIC_PACKAGE_ID;
   return legacy?.trim() || '';
+}
+
+export function getPackageIdsForNetwork(network: SuiNetwork): string[] {
+  const configured = getPackageIdForNetwork(network);
+  const ids = [
+    configured,
+    ...LEGACY_PACKAGE_IDS_BY_NETWORK[network]
+  ].filter((value): value is string => Boolean(value && value.trim().length > 0));
+
+  return Array.from(new Set(ids));
 }
 
 export function getWalrusPublisherUrlForNetwork(network: SuiNetwork): string {

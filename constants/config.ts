@@ -37,3 +37,8 @@ export const DEFAULT_FALLBACK_RPC_BY_NETWORK: Record<SuiNetwork, string> = {
   testnet: 'https://sui-testnet-rpc.publicnode.com',
   mainnet: 'https://sui-rpc.publicnode.com'
 };
+
+export const LEGACY_PACKAGE_IDS_BY_NETWORK: Record<SuiNetwork, string[]> = {
+  testnet: ['0xe1a9d6bad3a9ca056336477f425f6a39a724789d26f2a82a8e8d767091ce9b51'],
+  mainnet: ['0x160d4503e2377bfdca735aa757fe5df0d62817de010d1b34b901fa0f3ea7d6ec']
+};

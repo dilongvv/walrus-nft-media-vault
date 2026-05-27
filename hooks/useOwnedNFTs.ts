@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getMintHistory } from '@/hooks/useMintNFT';
 import { getNftType, isMoveObjectContent, mergeHistoryWithChain, parseNftObject } from '@/lib/nft';
 import { withRpcFallback } from '@/lib/sui-client';
-import { getPackageIdForNetwork } from '@/lib/utils';
+import { getPackageIdForNetwork, getPackageIdsForNetwork } from '@/lib/utils';
 import type { VaultNFT } from '@/types/nft';
 import { useWalletNetwork } from '@/hooks/useWalletNetwork';
 
@@ -13,33 +13,40 @@ export function useOwnedNFTs() {
   const account = useCurrentAccount();
   const { network } = useWalletNetwork();
   const packageId = getPackageIdForNetwork(network);
+  const packageIds = getPackageIdsForNetwork(network);
 
   return useQuery({
-    queryKey: ['owned-nfts', account?.address, network, packageId],
+    queryKey: ['owned-nfts', account?.address, network, packageIds],
     enabled: Boolean(account?.address && packageId),
     queryFn: async (): Promise<VaultNFT[]> => {
       if (!account?.address) return [];
-      const nftType = getNftType(packageId);
-      const response = await withRpcFallback(
-        (client) =>
-          client.getOwnedObjects({
-            owner: account.address,
-            filter: {
-              StructType: nftType
-            },
-            options: {
-              showContent: true,
-              showOwner: true,
-              showPreviousTransaction: true,
-              showType: true
-            }
-          }),
-        network
+      const responses = await Promise.all(
+        packageIds.map((id) =>
+          withRpcFallback(
+            (client) =>
+              client.getOwnedObjects({
+                owner: account.address,
+                filter: {
+                  StructType: getNftType(id)
+                },
+                options: {
+                  showContent: true,
+                  showOwner: true,
+                  showPreviousTransaction: true,
+                  showType: true
+                }
+              }),
+            network
+          )
+        )
       );
 
-      const chainNfts = response.data.flatMap((item) => {
+      const seen = new Set<string>();
+      const chainNfts = responses.flatMap((response) => response.data).flatMap((item) => {
         const data = item.data;
         if (!data?.content || !data.type || !isMoveObjectContent(data.content)) return [];
+        if (seen.has(data.objectId)) return [];
+        seen.add(data.objectId);
         return [
           parseNftObject(
             data.objectId,
@@ -60,12 +67,13 @@ export function useOwnedNFTs() {
 export function useNFT(objectId: string) {
   const { network } = useWalletNetwork();
   const packageId = getPackageIdForNetwork(network);
+  const packageIds = getPackageIdsForNetwork(network);
+  const nftTypes = new Set(packageIds.map((id) => getNftType(id)));
 
   return useQuery({
-    queryKey: ['nft', objectId, network, packageId],
+    queryKey: ['nft', objectId, network, packageIds],
     enabled: Boolean(objectId && packageId),
     queryFn: async (): Promise<VaultNFT> => {
-      const nftType = getNftType(packageId);
       const response = await withRpcFallback(
         (client) =>
           client.getObject({
@@ -80,7 +88,7 @@ export function useNFT(objectId: string) {
         network
       );
       const data = response.data;
-      if (!data?.content || !data.type || data.type !== nftType || !isMoveObjectContent(data.content)) {
+      if (!data?.content || !data.type || !nftTypes.has(data.type) || !isMoveObjectContent(data.content)) {
         throw new Error('NFT object was not found for this package.');
       }
       const parsed = parseNftObject(data.objectId, data.type, data.content.fields, network, undefined, data.previousTransaction ?? undefined);
