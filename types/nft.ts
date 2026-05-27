@@ -21,7 +21,7 @@ export interface MintInput {
   mediaType: string;
   fileHash: string;
   quiltPatchId?: string;
-  fileName?: string;
+  fileName: string;
 }
 
 export interface VaultNFT {
@@ -30,6 +30,8 @@ export interface VaultNFT {
   name: string;
   description: string;
   imageBlobId: string;
+  quiltPatchId?: string;
+  fileName?: string;
   mediaType: string;
   createdAt: number;
   fileHash: string;

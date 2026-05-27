@@ -21,17 +21,26 @@ export function isMoveObjectContent(content: unknown): content is MoveObjectCont
 export function parseNftObject(objectId: string, type: string, fields: Record<string, unknown>, network: SuiNetwork, owner?: string, digest?: string): VaultNFT {
   const mediaType = readString(fields.media_type);
   const imageBlobId = readString(fields.image_blob_id);
+  const quiltPatchId = readString(fields.quilt_patch_id);
+  const fileName = readString(fields.file_name);
   return {
     objectId,
     type,
     name: readString(fields.name),
     description: readString(fields.description),
     imageBlobId,
+    quiltPatchId: quiltPatchId || undefined,
+    fileName: fileName || undefined,
     mediaType,
     createdAt: readNumber(fields.created_at),
     fileHash: readString(fields.file_hash),
     mediaKind: getMediaKind(mediaType),
-    walrusUrl: getWalrusBlobUrl(imageBlobId, network),
+    walrusUrl: getWalrusFileUrl({
+      blobId: imageBlobId,
+      quiltPatchId: quiltPatchId || undefined,
+      fileName: fileName || undefined,
+      network
+    }),
     owner,
     digest
   };
@@ -63,6 +72,8 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
       name: `Minted media ${record.objectId.slice(0, 8)}`,
       description: 'Pending chain index refresh',
       imageBlobId: record.blobId,
+      quiltPatchId: record.quiltPatchId,
+      fileName: record.fileName,
       mediaType: record.mediaType,
       createdAt: record.createdAt,
       fileHash: record.fileHash,
