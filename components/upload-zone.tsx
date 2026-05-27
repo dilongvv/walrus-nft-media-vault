@@ -85,16 +85,10 @@ export function UploadZone({
                   Open media
                 </a>
               </Button>
-              <Button asChild size="sm" variant="outline">
-                <a href={uploaded.blobWalrusUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="h-4 w-4" />
-                  Open blob
-                </a>
-              </Button>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info icon={<FileCheck2 className="h-4 w-4" />} label="Blob ID" value={uploaded.blobId} />
-              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Quilt ID" value={uploaded.quiltId || 'N/A'} />
+              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Quilt Patch ID" value={uploaded.quiltPatchId || 'N/A'} />
               <Info icon={<Link2 className="h-4 w-4" />} label="Media URL" value={uploaded.walrusUrl} wide />
               <Info icon={<Link2 className="h-4 w-4" />} label="Blob URL" value={uploaded.blobWalrusUrl} wide />
               <Info icon={<Link2 className="h-4 w-4" />} label="wal.app" value={getWalAppLink(uploaded.blobId)} />

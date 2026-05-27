@@ -65,7 +65,7 @@ export function useMintNFT() {
         mediaType: input.mediaType,
         network,
         createdAt: Date.now(),
-        quiltId: input.quiltId,
+        quiltPatchId: input.quiltPatchId,
         fileName: input.fileName
       });
       await queryClient.invalidateQueries({ queryKey: ['owned-nfts', account.address, network, packageId] });

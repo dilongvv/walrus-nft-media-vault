@@ -53,7 +53,7 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
       mediaKind: getMediaKind(record.mediaType),
       walrusUrl: getWalrusFileUrl({
         blobId: record.blobId,
-        quiltId: record.quiltId,
+        quiltPatchId: record.quiltPatchId,
         fileName: record.fileName,
         network: record.network
       }),

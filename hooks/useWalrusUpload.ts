@@ -79,11 +79,10 @@ export function useWalrusUpload() {
 
       const uploaded: UploadedMedia = {
         blobId,
-        quiltId: storedFile.id,
+        quiltPatchId: storedFile.id,
         walrusUrl: getWalrusFileUrl({
           blobId,
-          quiltId: storedFile.id,
-          fileName: file.name,
+          quiltPatchId: storedFile.id,
           network
         }),
         blobWalrusUrl: getWalrusBlobUrl(blobId, network),

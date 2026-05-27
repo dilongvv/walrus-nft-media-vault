@@ -95,16 +95,20 @@ export function getWalrusBlobUrl(blobId: string, network: SuiNetwork = getConfig
 export function getWalrusFileUrl({
   network = getConfiguredNetwork(),
   blobId,
-  quiltId,
+  quiltPatchId,
   fileName
 }: {
   network?: SuiNetwork;
   blobId: string;
-  quiltId?: string;
+  quiltPatchId?: string;
   fileName?: string;
 }): string {
-  if (quiltId && fileName) {
-    return `${WALRUS_AGGREGATOR_BY_NETWORK[network]}/v1/blobs/by-quilt-id/${quiltId}/${encodeURIComponent(fileName)}`;
+  if (quiltPatchId) {
+    return `${WALRUS_AGGREGATOR_BY_NETWORK[network]}/v1/blobs/by-quilt-patch-id/${quiltPatchId}`;
+  }
+
+  if (fileName) {
+    return `${WALRUS_AGGREGATOR_BY_NETWORK[network]}/v1/blobs/${blobId}`;
   }
 
   return getWalrusBlobUrl(blobId, network);

@@ -4,7 +4,7 @@ export type MediaKind = 'image' | 'video' | 'audio' | 'model' | 'unknown';
 
 export interface UploadedMedia {
   blobId: string;
-  quiltId?: string;
+  quiltPatchId?: string;
   walrusUrl: string;
   blobWalrusUrl: string;
   size: number;
@@ -20,7 +20,7 @@ export interface MintInput {
   imageBlobId: string;
   mediaType: string;
   fileHash: string;
-  quiltId?: string;
+  quiltPatchId?: string;
   fileName?: string;
 }
 
@@ -52,7 +52,7 @@ export interface LocalMintRecord {
   mediaType: string;
   network: SuiNetwork;
   createdAt: number;
-  quiltId?: string;
+  quiltPatchId?: string;
   fileName?: string;
 }
 
