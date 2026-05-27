@@ -137,12 +137,23 @@ site-builder deploy --epochs 3 out
 
 ## Vercel Deployment
 
-Set the same environment variables in Vercel, then deploy. `vercel.json` uses:
+Recommended production workflow:
+
+1. Push the project to GitHub.
+2. In Vercel, click `Add New Project`.
+3. Import the GitHub repository.
+4. Set the same environment variables used in `.env.local`.
+5. Deploy once from the Vercel dashboard.
+6. Keep `main` as the production branch so future `git push origin main` updates redeploy automatically.
+
+This project is configured for static export on Vercel. `vercel.json` uses:
 
 - `npm install`
 - `npm run build`
 - output directory `out`
 - rewrite for `/nft/:path*`
+
+After the GitHub repository is connected, Vercel becomes the primary deployment path. Local CLI deployment is optional and mainly useful for one-off verification or debugging.
 
 ## Common Issues
 
