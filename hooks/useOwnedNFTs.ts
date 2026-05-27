@@ -83,7 +83,8 @@ export function useNFT(objectId: string) {
       if (!data?.content || !data.type || data.type !== nftType || !isMoveObjectContent(data.content)) {
         throw new Error('NFT object was not found for this package.');
       }
-      return parseNftObject(data.objectId, data.type, data.content.fields, network, undefined, data.previousTransaction ?? undefined);
+      const parsed = parseNftObject(data.objectId, data.type, data.content.fields, network, undefined, data.previousTransaction ?? undefined);
+      return mergeHistoryWithChain([parsed], getMintHistory().filter((record) => record.network === network))[0] ?? parsed;
     }
   });
 }

@@ -38,7 +38,23 @@ export function parseNftObject(objectId: string, type: string, fields: Record<st
 }
 
 export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintRecord[]): VaultNFT[] {
-  const byId = new Map(chainNfts.map((nft) => [nft.objectId, nft]));
+  const historyByObjectId = new Map(history.map((record) => [record.objectId, record]));
+  const enrichedChainNfts = chainNfts.map((nft) => {
+    const localRecord = historyByObjectId.get(nft.objectId);
+    if (!localRecord) return nft;
+
+    return {
+      ...nft,
+      walrusUrl: getWalrusFileUrl({
+        blobId: localRecord.blobId,
+        quiltPatchId: localRecord.quiltPatchId,
+        fileName: localRecord.fileName,
+        network: localRecord.network
+      })
+    };
+  });
+
+  const byId = new Map(enrichedChainNfts.map((nft) => [nft.objectId, nft]));
   const historicalNfts: VaultNFT[] = history
     .filter((record) => !byId.has(record.objectId))
     .map((record) => ({
@@ -60,7 +76,7 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
       digest: record.digest
     }));
 
-  return [...historicalNfts, ...chainNfts].sort((a, b) => b.createdAt - a.createdAt);
+  return [...historicalNfts, ...enrichedChainNfts].sort((a, b) => b.createdAt - a.createdAt);
 }
 
 function readString(value: unknown): string {
