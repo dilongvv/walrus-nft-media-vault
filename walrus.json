@@ -2,6 +2,6 @@
   "siteName": "Walrus NFT Media Vault",
   "dist": "out",
   "resources": "public/ws-resources.json",
-  "network": "testnet",
+  "network": "mainnet",
   "epochs": 3
 }

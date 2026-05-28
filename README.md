@@ -6,6 +6,7 @@ Walrus NFT Media Vault is a production-ready Sui + Walrus dApp for decentralized
 
 - Next.js App Router, TypeScript strict mode, Tailwind CSS, shadcn-style UI primitives
 - `@mysten/dapp-kit`, `@mysten/sui`, `@mysten/walrus`, TanStack Query
+- Sui Core API data layer: GraphQL primary, gRPC fallback for reads and transaction execution
 - Walrus Upload Relay with `writeFilesFlow`
 - Sui Move owned-object NFT package
 - Static export for Walrus Sites and Vercel
@@ -23,6 +24,7 @@ constants/
 hooks/
   useMintNFT.ts
   useOwnedNFTs.ts
+  useSuiTransactionExecutor.ts
   useWalletNetwork.ts
   useWalrusUpload.ts
 lib/
@@ -54,19 +56,28 @@ Required variables:
 
 ```bash
 NEXT_PUBLIC_SUI_NETWORK=mainnet
-NEXT_PUBLIC_SUI_RPC_URL=https://fullnode.mainnet.sui.io:443
-NEXT_PUBLIC_SUI_FALLBACK_RPC_URL=https://sui-rpc.publicnode.com
-NEXT_PUBLIC_MAINNET_SUI_RPC_URL=https://fullnode.mainnet.sui.io:443
-NEXT_PUBLIC_MAINNET_SUI_FALLBACK_RPC_URL=https://sui-rpc.publicnode.com
-NEXT_PUBLIC_TESTNET_SUI_RPC_URL=https://fullnode.testnet.sui.io:443
-NEXT_PUBLIC_TESTNET_SUI_FALLBACK_RPC_URL=https://sui-testnet-rpc.publicnode.com
+NEXT_PUBLIC_SUI_GRAPHQL_URL=https://graphql.mainnet.sui.io/graphql
+NEXT_PUBLIC_SUI_FALLBACK_GRAPHQL_URL=https://graphql.mainnet.sui.io/graphql
+NEXT_PUBLIC_SUI_GRPC_URL=https://fullnode.mainnet.sui.io:443
+NEXT_PUBLIC_SUI_WALLET_RPC_URL=https://fullnode.mainnet.sui.io:443
+NEXT_PUBLIC_SUI_FALLBACK_WALLET_RPC_URL=https://sui-rpc.publicnode.com
+NEXT_PUBLIC_MAINNET_SUI_GRAPHQL_URL=https://graphql.mainnet.sui.io/graphql
+NEXT_PUBLIC_MAINNET_SUI_FALLBACK_GRAPHQL_URL=https://graphql.mainnet.sui.io/graphql
+NEXT_PUBLIC_MAINNET_SUI_GRPC_URL=https://fullnode.mainnet.sui.io:443
+NEXT_PUBLIC_MAINNET_SUI_WALLET_RPC_URL=https://fullnode.mainnet.sui.io:443
+NEXT_PUBLIC_MAINNET_SUI_FALLBACK_WALLET_RPC_URL=https://sui-rpc.publicnode.com
+NEXT_PUBLIC_TESTNET_SUI_GRAPHQL_URL=https://graphql.testnet.sui.io/graphql
+NEXT_PUBLIC_TESTNET_SUI_FALLBACK_GRAPHQL_URL=https://graphql.testnet.sui.io/graphql
+NEXT_PUBLIC_TESTNET_SUI_GRPC_URL=https://fullnode.testnet.sui.io:443
+NEXT_PUBLIC_TESTNET_SUI_WALLET_RPC_URL=https://fullnode.testnet.sui.io:443
+NEXT_PUBLIC_TESTNET_SUI_FALLBACK_WALLET_RPC_URL=https://sui-testnet-rpc.publicnode.com
 NEXT_PUBLIC_MAINNET_WALRUS_PUBLISHER_URL=https://upload-relay.mainnet.walrus.space
 NEXT_PUBLIC_TESTNET_WALRUS_PUBLISHER_URL=https://upload-relay.testnet.walrus.space
 NEXT_PUBLIC_MAINNET_PACKAGE_ID=
 NEXT_PUBLIC_TESTNET_PACKAGE_ID=
 ```
 
-The app defaults to `mainnet`, and the top-right network switcher selects the matching package id, RPC endpoint, and Walrus relay at runtime.
+The app defaults to `mainnet`, and the top-right network switcher selects the matching package id, GraphQL endpoint, gRPC endpoint, wallet compatibility RPC endpoint, and Walrus relay at runtime. Wallet RPC variables are kept only for `@mysten/dapp-kit` wallet provider compatibility; app reads and transaction execution use GraphQL/gRPC.
 
 ## Install And Run
 
@@ -104,9 +115,9 @@ The browser validates MIME type and size, calculates a SHA-256 hash, wraps the f
 
 1. `writeFilesFlow({ files })`
 2. `flow.encode()`
-3. wallet-signed `flow.register(...)`
+3. wallet-signed `flow.register(...)` prepared through GraphQL and executed through Sui Core API
 4. `flow.upload({ digest })`
-5. wallet-signed `flow.certify()`
+5. wallet-signed `flow.certify()` prepared through GraphQL and executed through Sui Core API
 6. `flow.listFiles()` to obtain the Blob ID
 
 No application backend is used.
@@ -116,10 +127,18 @@ No application backend is used.
 After upload, the dApp builds a PTB with `Transaction` and calls:
 
 ```text
-<PACKAGE_ID>::nft::mint(name, description, image_blob_id, media_type, file_hash, clock)
+<PACKAGE_ID>::nft::mint(name, description, image_blob_id, quilt_patch_id, file_name, media_type, file_hash, clock)
 ```
 
-The hook executes through `useSignAndExecuteTransaction`, requests object changes, and extracts the created NFT object id.
+The hook builds the PTB with `Transaction`, resolves it against Sui GraphQL, asks the connected wallet to sign the resolved transaction JSON, executes the signed bytes through GraphQL with gRPC fallback, then extracts the created NFT object id from Core API effects.
+
+## Sui Data Access
+
+- NFT list: `listOwnedObjects` through Sui GraphQL, with gRPC fallback.
+- NFT detail: `getObject` through Sui GraphQL, with gRPC fallback.
+- Mint execution: `executeTransaction` through Sui GraphQL, with gRPC fallback.
+- Walrus register/certify execution: same Core API transaction executor.
+- Wallet UI and network switching: `@mysten/dapp-kit` still receives wallet RPC URLs because the current stable wallet provider requires them for compatibility.
 
 ## Walrus Sites Deployment
 
@@ -137,7 +156,7 @@ cp public/ws-resources.json out/ws-resources.json
 site-builder deploy --epochs 3 out
 ```
 
-`public/ws-resources.json` routes `/nft/*` to the static detail shell so object detail pages remain shareable on a decentralized static host.
+`public/ws-resources.json` routes `/nft/*` to the static detail shell so object detail pages remain shareable on a decentralized static host. `walrus.json` defaults to mainnet; use `NEXT_PUBLIC_SUI_NETWORK=testnet` and the testnet package id when deploying a testnet build.
 
 ## Vercel Deployment
 
@@ -163,7 +182,8 @@ After the GitHub repository is connected, Vercel becomes the primary deployment 
 
 - Package ID not configured: publish the Move package and set the package id for the selected network.
 - Wallet rejects signing: retry the upload or mint action; no partial app state is trusted.
-- RPC unavailable: the query layer retries and falls back to the network-specific fallback RPC when configured, otherwise `NEXT_PUBLIC_SUI_FALLBACK_RPC_URL`.
+- Sui data unavailable: the query layer retries GraphQL, then falls back to gRPC.
+- Wallet provider unavailable: check the wallet compatibility RPC variables and the selected wallet network.
 - Gas insufficient: request testnet SUI from the faucet and retry.
 - Unsupported file: only `image/*`, `video/*`, `audio/*`, `model/gltf-binary`, and `model/gltf+json` are accepted.
 - File too large: the browser rejects files above 50MB.

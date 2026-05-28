@@ -1,13 +1,13 @@
-import { SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
+import { SuiGrpcClient } from '@mysten/sui/grpc';
 import { DEFAULT_NETWORK, WALRUS_EPOCHS, type SuiNetwork } from '@/constants/config';
-import { getPrimaryRpcUrl } from '@/lib/sui-client';
+import { getGrpcUrl } from '@/lib/sui-client';
 import { getWalrusPublisherUrlForNetwork } from '@/lib/utils';
 
 export async function createWalrusClient(network: SuiNetwork = DEFAULT_NETWORK) {
   const { walrus } = await import('@mysten/walrus');
-  return new SuiJsonRpcClient({
+  return new SuiGrpcClient({
     network,
-    url: getPrimaryRpcUrl(network)
+    baseUrl: getGrpcUrl(network)
   }).$extend(
     walrus({
       uploadRelay: {

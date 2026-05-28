@@ -1,33 +1,22 @@
 'use client';
 
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
-import type { SuiTransactionBlockResponse } from '@mysten/sui/jsonRpc';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { buildMintTransaction } from '@/lib/transactions';
 import { getPackageIdForNetwork, logDebug, normalizeError } from '@/lib/utils';
 import type { LocalMintRecord, MintInput, MintResult } from '@/types/nft';
 import { useWalletNetwork } from '@/hooks/useWalletNetwork';
+import { useSuiTransactionExecutor } from '@/hooks/useSuiTransactionExecutor';
 
 const HISTORY_KEY = 'walrus-nft-media-vault-history';
 
 export function useMintNFT() {
   const account = useCurrentAccount();
-  const client = useSuiClient();
   const queryClient = useQueryClient();
   const { network } = useWalletNetwork();
   const packageId = getPackageIdForNetwork(network);
-  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction<SuiTransactionBlockResponse>({
-    execute: ({ bytes, signature }) =>
-      client.executeTransactionBlock({
-        transactionBlock: bytes,
-        signature,
-        options: {
-          showEffects: true,
-          showObjectChanges: true
-        }
-      })
-  });
+  const { signAndExecute } = useSuiTransactionExecutor(network);
 
   const mutation = useMutation({
     mutationFn: async (input: MintInput): Promise<MintResult> => {
@@ -37,17 +26,10 @@ export function useMintNFT() {
 
       const tx = buildMintTransaction(packageId, input);
       logDebug('mint', 'built mint transaction', input);
-      const result = await signAndExecuteTransaction({
-        transaction: tx,
-        chain: `sui:${network}`
-      });
+      const result = await signAndExecute(tx);
 
-      if (result.effects?.status.status !== 'success') {
-        throw new Error(result.effects?.status.error || 'Mint transaction failed.');
-      }
-
-      const createdObject = result.objectChanges?.find((change) => change.type === 'created' && change.objectType === `${packageId}::nft::NFT`);
-      const objectId = createdObject?.type === 'created' ? createdObject.objectId : undefined;
+      const createdObject = result.createdObjects.find((change) => change.objectType === `${packageId}::nft::NFT`);
+      const objectId = createdObject?.objectId;
       if (!objectId) {
         throw new Error('Mint succeeded but NFT object id was not returned.');
       }

@@ -3,21 +3,21 @@
 import { SuiClientProvider, WalletProvider, createNetworkConfig } from '@mysten/dapp-kit';
 import { type ReactNode } from 'react';
 import { DEFAULT_NETWORK, SUPPORTED_NETWORKS } from '@/constants/config';
-import { getFallbackRpcUrl, getPrimaryRpcUrl } from '@/lib/sui-client';
+import { getFallbackWalletRpcUrl, getWalletRpcUrl } from '@/lib/sui-client';
 
 const { networkConfig } = createNetworkConfig({
   testnet: {
     network: 'testnet',
-    url: getPrimaryRpcUrl('testnet'),
+    url: getWalletRpcUrl('testnet'),
     variables: {
-      fallbackUrl: getFallbackRpcUrl('testnet')
+      fallbackUrl: getFallbackWalletRpcUrl('testnet')
     }
   },
   mainnet: {
     network: 'mainnet',
-    url: getPrimaryRpcUrl('mainnet'),
+    url: getWalletRpcUrl('mainnet'),
     variables: {
-      fallbackUrl: getFallbackRpcUrl('mainnet')
+      fallbackUrl: getFallbackWalletRpcUrl('mainnet')
     }
   }
 });

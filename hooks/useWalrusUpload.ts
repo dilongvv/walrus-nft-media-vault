@@ -1,6 +1,6 @@
 'use client';
 
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { WALRUS_EPOCHS, createWalrusClient, createWalrusFile } from '@/lib/walru
 import { getWalrusBlobUrl, getWalrusFileUrl, logDebug, normalizeError, sha256Hex, validateMediaFile, getMediaKind } from '@/lib/utils';
 import type { UploadedMedia, UploadProgress } from '@/types/nft';
 import { useWalletNetwork } from '@/hooks/useWalletNetwork';
+import { useSuiTransactionExecutor } from '@/hooks/useSuiTransactionExecutor';
 
 const initialProgress: UploadProgress = {
   phase: 'idle',
@@ -18,7 +19,7 @@ const initialProgress: UploadProgress = {
 export function useWalrusUpload() {
   const account = useCurrentAccount();
   const { network } = useWalletNetwork();
-  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { signAndExecute } = useSuiTransactionExecutor(network);
   const [progress, setProgress] = useState<UploadProgress>(initialProgress);
 
   const reset = useCallback(() => setProgress(initialProgress), []);
@@ -50,10 +51,7 @@ export function useWalrusUpload() {
         owner: account.address,
         deletable: true
       });
-      const registerResult = await signAndExecuteTransaction({
-        transaction: registerTx,
-        chain: `sui:${network}`
-      });
+      const registerResult = await signAndExecute(registerTx);
       logDebug('walrus', 'register transaction signed', registerResult);
 
       setProgress({ phase: 'uploading', percent: 68, message: 'Uploading through Walrus relay' });
@@ -61,10 +59,7 @@ export function useWalrusUpload() {
 
       setProgress({ phase: 'certifying', percent: 84, message: 'Certifying blob availability' });
       const certifyTx = flow.certify();
-      const certifyResult = await signAndExecuteTransaction({
-        transaction: certifyTx,
-        chain: `sui:${network}`
-      });
+      const certifyResult = await signAndExecute(certifyTx);
       logDebug('walrus', 'certify transaction signed', certifyResult);
 
       const [storedFile] = await flow.listFiles() as Array<{ blobId?: string; id?: string }>;
