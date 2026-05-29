@@ -1,7 +1,7 @@
 import type { SuiClientTypes } from '@mysten/sui/client';
 import { SuiGrpcClient } from '@mysten/sui/grpc';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
-import { type Transaction } from '@mysten/sui/transactions';
+import { Transaction } from '@mysten/sui/transactions';
 import { fromBase64 } from '@mysten/sui/utils';
 import {
   DEFAULT_FALLBACK_GRAPHQL_BY_NETWORK,
@@ -14,6 +14,17 @@ import {
 } from '@/constants/config';
 
 export type SuiDataClient = SuiGraphQLClient | SuiGrpcClient;
+type ExecutedCoreTransactionResult = SuiClientTypes.TransactionResult<{
+  effects: true;
+  objectTypes: true;
+}>;
+type ExecutedCoreTransaction = SuiClientTypes.Transaction<{
+  effects: true;
+  objectTypes: true;
+}>;
+
+const SUI_TRANSACTION_TIMEOUT_MS = 120_000;
+const SUI_TRANSACTION_RECOVERY_WAIT_MS = 45_000;
 
 export interface ExecutedObjectChange {
   objectId: string;
@@ -141,20 +152,29 @@ export async function prepareTransactionForWallet(transaction: Transaction, netw
 }
 
 export async function executeSignedTransaction(network: SuiNetwork, bytes: string, signature: string): Promise<ExecutedTransactionSummary> {
+  const transactionBytes = fromBase64(bytes);
+  const expectedDigest = await Transaction.from(transactionBytes).getDigest({
+    client: createSuiGraphQLClient(network)
+  });
   const result = await withSuiTransactionFallback(
     (client) =>
       client.executeTransaction({
-        transaction: fromBase64(bytes),
+        transaction: transactionBytes,
         signatures: [signature],
         include: {
           effects: true,
           objectTypes: true
         }
       }),
-    network
+    network,
+    expectedDigest
   );
 
-  const transaction = result.$kind === 'Transaction' ? result.Transaction : result.FailedTransaction;
+  return summarizeExecutedTransaction(result);
+}
+
+function summarizeExecutedTransaction(result: ExecutedCoreTransactionResult): ExecutedTransactionSummary {
+  const transaction = getCoreTransaction(result);
   const status = transaction.status;
   if (!status.success) {
     throw new Error(`Transaction failed: ${formatExecutionError(status.error)}`);
@@ -187,19 +207,61 @@ export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, mes
 
 async function withSuiTransactionFallback<T>(
   request: (client: SuiDataClient) => Promise<T>,
-  network: SuiNetwork
+  network: SuiNetwork,
+  expectedDigest?: string
 ): Promise<T> {
   const primary = createSuiGraphQLClient(network, false);
   try {
-    return await withTimeout(request(primary), 30_000, 'Primary Sui GraphQL transaction timed out.');
+    return await withTimeout(request(primary), SUI_TRANSACTION_TIMEOUT_MS, 'Primary Sui GraphQL transaction timed out.');
   } catch (primaryError) {
+    if (expectedDigest && isTimeoutError(primaryError)) {
+      const recovered = await recoverTimedOutTransaction(primary, expectedDigest);
+      if (recovered) return recovered as T;
+    }
+
+    const fallbackGraphQL = createSuiGraphQLClient(network, true);
+    try {
+      return await withTimeout(request(fallbackGraphQL), SUI_TRANSACTION_TIMEOUT_MS, 'Fallback Sui GraphQL transaction timed out.');
+    } catch (fallbackGraphQLError) {
+      if (expectedDigest && isTimeoutError(fallbackGraphQLError)) {
+        const recovered = await recoverTimedOutTransaction(fallbackGraphQL, expectedDigest);
+        if (recovered) return recovered as T;
+      }
+
     const fallbackGrpc = createSuiGrpcClient(network);
     try {
-      return await withTimeout(request(fallbackGrpc), 30_000, 'Fallback Sui gRPC transaction timed out.');
+        return await withTimeout(request(fallbackGrpc), SUI_TRANSACTION_TIMEOUT_MS, 'Fallback Sui gRPC transaction timed out.');
     } catch (fallbackGrpcError) {
-      throw new Error(`Sui transaction unavailable. GraphQL: ${formatUnknownError(primaryError)}; gRPC: ${formatUnknownError(fallbackGrpcError)}`);
+        if (expectedDigest && isTimeoutError(fallbackGrpcError)) {
+          const recovered = await recoverTimedOutTransaction(primary, expectedDigest);
+          if (recovered) return recovered as T;
+        }
+
+        throw new Error(
+          `Sui transaction unavailable. GraphQL: ${formatUnknownError(primaryError)}; fallback GraphQL: ${formatUnknownError(fallbackGraphQLError)}; gRPC: ${formatUnknownError(fallbackGrpcError)}`
+        );
+      }
     }
   }
+}
+
+async function recoverTimedOutTransaction(client: SuiDataClient, digest: string): Promise<ExecutedCoreTransactionResult | undefined> {
+  try {
+    return await client.waitForTransaction({
+      digest,
+      timeout: SUI_TRANSACTION_RECOVERY_WAIT_MS,
+      include: {
+        effects: true,
+        objectTypes: true
+      }
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+function getCoreTransaction(result: ExecutedCoreTransactionResult): ExecutedCoreTransaction {
+  return result.$kind === 'Transaction' ? result.Transaction : result.FailedTransaction;
 }
 
 function getConfiguredNetwork(): SuiNetwork {
@@ -208,6 +270,10 @@ function getConfiguredNetwork(): SuiNetwork {
 
 function formatUnknownError(error: unknown): string {
   return error instanceof Error ? error.message : 'failed';
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && error.message.toLowerCase().includes('timed out');
 }
 
 function formatExecutionError(error: SuiClientTypes.ExecutionError): string {
