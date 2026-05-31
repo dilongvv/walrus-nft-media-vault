@@ -26,6 +26,19 @@ export function parseNftObject(objectId: string, type: string, fields: Record<st
   const thumbnailBlobId = readString(fields.thumbnail_blob_id) || imageBlobId;
   const thumbnailQuiltPatchId = readString(fields.thumbnail_quilt_patch_id) || quiltPatchId;
   const thumbnailFileName = readString(fields.thumbnail_file_name) || fileName;
+  const walrusUrl = getWalrusFileUrl({
+    blobId: imageBlobId,
+    quiltPatchId: quiltPatchId || undefined,
+    fileName: fileName || undefined,
+    network
+  });
+  const thumbnailWalrusUrl = getWalrusFileUrl({
+    blobId: thumbnailBlobId,
+    quiltPatchId: thumbnailQuiltPatchId || undefined,
+    fileName: thumbnailFileName || undefined,
+    network
+  });
+
   return {
     objectId,
     type,
@@ -41,12 +54,8 @@ export function parseNftObject(objectId: string, type: string, fields: Record<st
     createdAt: readNumber(fields.created_at),
     fileHash: readString(fields.file_hash),
     mediaKind: getMediaKind(mediaType),
-    walrusUrl: getWalrusFileUrl({
-      blobId: imageBlobId,
-      quiltPatchId: quiltPatchId || undefined,
-      fileName: fileName || undefined,
-      network
-    }),
+    walrusUrl,
+    thumbnailWalrusUrl,
     owner,
     digest
   };
@@ -60,13 +69,14 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
 
     return {
       ...nft,
-      thumbnailBlobId: localRecord.thumbnailBlobId || nft.thumbnailBlobId,
-      thumbnailQuiltPatchId: localRecord.thumbnailQuiltPatchId || nft.thumbnailQuiltPatchId,
-      thumbnailFileName: localRecord.thumbnailFileName || nft.thumbnailFileName,
-      walrusUrl: getWalrusFileUrl({
-        blobId: localRecord.blobId,
-        quiltPatchId: localRecord.quiltPatchId,
-        fileName: localRecord.fileName,
+      digest: nft.digest || localRecord.digest,
+      thumbnailBlobId: nft.thumbnailBlobId || localRecord.thumbnailBlobId || nft.imageBlobId,
+      thumbnailQuiltPatchId: nft.thumbnailQuiltPatchId || localRecord.thumbnailQuiltPatchId || nft.quiltPatchId,
+      thumbnailFileName: nft.thumbnailFileName || localRecord.thumbnailFileName || nft.fileName,
+      thumbnailWalrusUrl: nft.thumbnailWalrusUrl || getWalrusFileUrl({
+        blobId: localRecord.thumbnailBlobId || localRecord.blobId,
+        quiltPatchId: localRecord.thumbnailQuiltPatchId || localRecord.quiltPatchId,
+        fileName: localRecord.thumbnailFileName || localRecord.fileName,
         network: localRecord.network
       })
     };
@@ -75,29 +85,41 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
   const byId = new Map(enrichedChainNfts.map((nft) => [nft.objectId, nft]));
   const historicalNfts: VaultNFT[] = history
     .filter((record) => !byId.has(record.objectId))
-    .map((record) => ({
-      objectId: record.objectId,
-      type: 'local-history',
-      name: `Minted media ${record.objectId.slice(0, 8)}`,
-      description: 'Pending chain index refresh',
-      imageBlobId: record.blobId,
-      quiltPatchId: record.quiltPatchId,
-      fileName: record.fileName,
-      thumbnailBlobId: record.thumbnailBlobId || record.blobId,
-      thumbnailQuiltPatchId: record.thumbnailQuiltPatchId || record.quiltPatchId,
-      thumbnailFileName: record.thumbnailFileName || record.fileName,
-      mediaType: record.mediaType,
-      createdAt: record.createdAt,
-      fileHash: record.fileHash,
-      mediaKind: getMediaKind(record.mediaType),
-      walrusUrl: getWalrusFileUrl({
-        blobId: record.blobId,
+    .map((record) => {
+      const thumbnailBlobId = record.thumbnailBlobId || record.blobId;
+      const thumbnailQuiltPatchId = record.thumbnailQuiltPatchId || record.quiltPatchId;
+      const thumbnailFileName = record.thumbnailFileName || record.fileName;
+
+      return {
+        objectId: record.objectId,
+        type: 'local-history',
+        name: `Minted media ${record.objectId.slice(0, 8)}`,
+        description: 'Pending chain index refresh',
+        imageBlobId: record.blobId,
         quiltPatchId: record.quiltPatchId,
         fileName: record.fileName,
-        network: record.network
-      }),
-      digest: record.digest
-    }));
+        thumbnailBlobId,
+        thumbnailQuiltPatchId,
+        thumbnailFileName,
+        mediaType: record.mediaType,
+        createdAt: record.createdAt,
+        fileHash: record.fileHash,
+        mediaKind: getMediaKind(record.mediaType),
+        walrusUrl: getWalrusFileUrl({
+          blobId: record.blobId,
+          quiltPatchId: record.quiltPatchId,
+          fileName: record.fileName,
+          network: record.network
+        }),
+        thumbnailWalrusUrl: getWalrusFileUrl({
+          blobId: thumbnailBlobId,
+          quiltPatchId: thumbnailQuiltPatchId,
+          fileName: thumbnailFileName,
+          network: record.network
+        }),
+        digest: record.digest
+      };
+    });
 
   return [...historicalNfts, ...enrichedChainNfts].sort((a, b) => b.createdAt - a.createdAt);
 }

@@ -47,6 +47,7 @@ export interface VaultNFT {
   fileHash: string;
   mediaKind: MediaKind;
   walrusUrl: string;
+  thumbnailWalrusUrl: string;
   owner?: string;
   digest?: string;
 }

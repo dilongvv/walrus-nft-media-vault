@@ -69,6 +69,7 @@ export function NFTDetailClient({ objectId: providedObjectId }: { objectId?: str
                 <Meta label="NFT Object ID" value={data.objectId} />
                 <Meta label="Blob ID" value={data.imageBlobId} />
                 <Meta label="Walrus URL" value={data.walrusUrl} />
+                <Meta label="Thumbnail URL" value={data.thumbnailWalrusUrl} />
                 <Meta label="MIME type" value={data.mediaType} />
                 <Meta label="File hash" value={data.fileHash} />
                 <Meta label="Created" value={new Date(data.createdAt).toLocaleString()} />
@@ -76,6 +77,7 @@ export function NFTDetailClient({ objectId: providedObjectId }: { objectId?: str
                   <CopyButton value={data.objectId} label="Copy Object" />
                   <CopyButton value={data.imageBlobId} label="Copy Blob" />
                   <CopyButton value={data.walrusUrl} label="Copy Media URL" />
+                  <CopyButton value={data.thumbnailWalrusUrl} label="Copy Thumbnail" />
                   {shareUrl ? <CopyButton value={shareUrl} label="Copy Share" /> : null}
                   <Button asChild variant="secondary" size="sm">
                     <a href={data.walrusUrl} target="_blank" rel="noreferrer">
