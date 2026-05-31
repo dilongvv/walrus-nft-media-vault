@@ -27,7 +27,10 @@ export function MintPanel({ uploaded }: { uploaded?: UploadedMedia }) {
       mediaType: uploaded.mimeType,
       fileHash: uploaded.fileHash,
       quiltPatchId: uploaded.quiltPatchId,
-      fileName: uploaded.fileName
+      fileName: uploaded.fileName,
+      thumbnailBlobId: uploaded.thumbnailBlobId,
+      thumbnailQuiltPatchId: uploaded.thumbnailQuiltPatchId,
+      thumbnailFileName: uploaded.thumbnailFileName
     });
     setLastMint(result);
   }

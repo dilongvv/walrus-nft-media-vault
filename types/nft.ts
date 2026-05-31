@@ -7,6 +7,10 @@ export interface UploadedMedia {
   quiltPatchId?: string;
   walrusUrl: string;
   blobWalrusUrl: string;
+  thumbnailBlobId: string;
+  thumbnailQuiltPatchId?: string;
+  thumbnailWalrusUrl: string;
+  thumbnailFileName: string;
   size: number;
   mimeType: string;
   fileHash: string;
@@ -22,6 +26,9 @@ export interface MintInput {
   fileHash: string;
   quiltPatchId?: string;
   fileName: string;
+  thumbnailBlobId: string;
+  thumbnailQuiltPatchId?: string;
+  thumbnailFileName: string;
 }
 
 export interface VaultNFT {
@@ -32,6 +39,9 @@ export interface VaultNFT {
   imageBlobId: string;
   quiltPatchId?: string;
   fileName?: string;
+  thumbnailBlobId: string;
+  thumbnailQuiltPatchId?: string;
+  thumbnailFileName?: string;
   mediaType: string;
   createdAt: number;
   fileHash: string;
@@ -56,10 +66,13 @@ export interface LocalMintRecord {
   createdAt: number;
   quiltPatchId?: string;
   fileName?: string;
+  thumbnailBlobId?: string;
+  thumbnailQuiltPatchId?: string;
+  thumbnailFileName?: string;
 }
 
 export interface UploadProgress {
-  phase: 'idle' | 'validating' | 'hashing' | 'encoding' | 'registering' | 'uploading' | 'certifying' | 'complete' | 'error';
+  phase: 'idle' | 'validating' | 'poster' | 'hashing' | 'encoding' | 'registering' | 'uploading' | 'certifying' | 'complete' | 'error';
   percent: number;
   message: string;
 }

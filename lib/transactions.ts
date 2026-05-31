@@ -16,6 +16,9 @@ export function buildMintTransaction(packageId: string, input: MintInput): Trans
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.imageBlobId))),
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.quiltPatchId || ''))),
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.fileName))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.thumbnailBlobId))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.thumbnailQuiltPatchId || ''))),
+      tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.thumbnailFileName))),
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.mediaType))),
       tx.pure.vector('u8', Array.from(new TextEncoder().encode(input.fileHash))),
       tx.object(SUI_CLOCK_OBJECT_ID)

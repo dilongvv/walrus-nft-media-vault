@@ -23,6 +23,9 @@ export function parseNftObject(objectId: string, type: string, fields: Record<st
   const imageBlobId = readString(fields.image_blob_id);
   const quiltPatchId = readString(fields.quilt_patch_id);
   const fileName = readString(fields.file_name);
+  const thumbnailBlobId = readString(fields.thumbnail_blob_id) || imageBlobId;
+  const thumbnailQuiltPatchId = readString(fields.thumbnail_quilt_patch_id) || quiltPatchId;
+  const thumbnailFileName = readString(fields.thumbnail_file_name) || fileName;
   return {
     objectId,
     type,
@@ -31,6 +34,9 @@ export function parseNftObject(objectId: string, type: string, fields: Record<st
     imageBlobId,
     quiltPatchId: quiltPatchId || undefined,
     fileName: fileName || undefined,
+    thumbnailBlobId,
+    thumbnailQuiltPatchId: thumbnailQuiltPatchId || undefined,
+    thumbnailFileName: thumbnailFileName || undefined,
     mediaType,
     createdAt: readNumber(fields.created_at),
     fileHash: readString(fields.file_hash),
@@ -54,6 +60,9 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
 
     return {
       ...nft,
+      thumbnailBlobId: localRecord.thumbnailBlobId || nft.thumbnailBlobId,
+      thumbnailQuiltPatchId: localRecord.thumbnailQuiltPatchId || nft.thumbnailQuiltPatchId,
+      thumbnailFileName: localRecord.thumbnailFileName || nft.thumbnailFileName,
       walrusUrl: getWalrusFileUrl({
         blobId: localRecord.blobId,
         quiltPatchId: localRecord.quiltPatchId,
@@ -74,6 +83,9 @@ export function mergeHistoryWithChain(chainNfts: VaultNFT[], history: LocalMintR
       imageBlobId: record.blobId,
       quiltPatchId: record.quiltPatchId,
       fileName: record.fileName,
+      thumbnailBlobId: record.thumbnailBlobId || record.blobId,
+      thumbnailQuiltPatchId: record.thumbnailQuiltPatchId || record.quiltPatchId,
+      thumbnailFileName: record.thumbnailFileName || record.fileName,
       mediaType: record.mediaType,
       createdAt: record.createdAt,
       fileHash: record.fileHash,

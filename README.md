@@ -121,14 +121,26 @@ The browser validates MIME type and size, calculates a SHA-256 hash, wraps the f
 5. wallet-signed `flow.certify()` prepared through GraphQL and executed through Sui Core API
 6. `flow.listFiles()` to obtain the Blob ID
 
-No application backend is used.
+No application backend is used. For video uploads, the browser also extracts a JPEG poster frame and uploads it in the same Walrus quilt. The NFT stores both the original media patch and the thumbnail patch so wallets can index a real image while the dApp still opens the video.
 
 ## NFT Mint Flow
 
 After upload, the dApp builds a PTB with `Transaction` and calls:
 
 ```text
-<PACKAGE_ID>::nft::mint(name, description, image_blob_id, quilt_patch_id, file_name, media_type, file_hash, clock)
+<PACKAGE_ID>::nft::mint(
+  name,
+  description,
+  image_blob_id,
+  quilt_patch_id,
+  file_name,
+  thumbnail_blob_id,
+  thumbnail_quilt_patch_id,
+  thumbnail_file_name,
+  media_type,
+  file_hash,
+  clock
+)
 ```
 
 The hook builds the PTB with `Transaction`, resolves it against Sui GraphQL, asks the connected wallet to sign the resolved transaction JSON, executes the signed bytes through GraphQL with gRPC fallback, then extracts the created NFT object id from Core API effects.
@@ -136,11 +148,13 @@ The hook builds the PTB with `Transaction`, resolves it against Sui GraphQL, ask
 The current mainnet package registers Sui `Display<NFT>` metadata during publish:
 
 ```text
-image_url = https://aggregator.walrus-mainnet.walrus.space/v1/blobs/by-quilt-patch-id/{quilt_patch_id}
-link      = https://walrus-nft-media-vault.vercel.app/nft/{id}
+image_url     = https://aggregator.walrus-mainnet.walrus.space/v1/blobs/by-quilt-patch-id/{thumbnail_quilt_patch_id}
+animation_url = https://aggregator.walrus-mainnet.walrus.space/v1/blobs/by-quilt-patch-id/{quilt_patch_id}
+media_url     = https://aggregator.walrus-mainnet.walrus.space/v1/blobs/by-quilt-patch-id/{quilt_patch_id}
+link          = https://walrus-nft-media-vault.vercel.app/nft/{id}
 ```
 
-This keeps the dApp display path unchanged while giving wallets such as Slush a standard `image_url` field to index for newly minted NFTs.
+For images, the thumbnail fields point to the original image. For videos, `image_url` points to the generated poster image, while `animation_url` and `media_url` point to the original Walrus video.
 
 ## Sui Data Access
 

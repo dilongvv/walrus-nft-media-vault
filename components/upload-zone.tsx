@@ -89,7 +89,10 @@ export function UploadZone({
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info icon={<FileCheck2 className="h-4 w-4" />} label="Blob ID" value={uploaded.blobId} />
               <Info icon={<FileCheck2 className="h-4 w-4" />} label="Quilt Patch ID" value={uploaded.quiltPatchId || 'N/A'} />
+              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Thumbnail Blob ID" value={uploaded.thumbnailBlobId} />
+              <Info icon={<FileCheck2 className="h-4 w-4" />} label="Thumbnail Patch ID" value={uploaded.thumbnailQuiltPatchId || 'N/A'} />
               <Info icon={<Link2 className="h-4 w-4" />} label="Media URL" value={uploaded.walrusUrl} wide />
+              <Info icon={<Link2 className="h-4 w-4" />} label="Thumbnail URL" value={uploaded.thumbnailWalrusUrl} wide />
               <Info icon={<Link2 className="h-4 w-4" />} label="Blob URL" value={uploaded.blobWalrusUrl} wide />
               <Info icon={<Link2 className="h-4 w-4" />} label="wal.app" value={getWalAppLink(uploaded.blobId)} />
               <Info label="Size" value={formatBytes(uploaded.size)} />

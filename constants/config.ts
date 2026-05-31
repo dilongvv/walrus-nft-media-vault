@@ -56,6 +56,7 @@ export const DEFAULT_GRPC_BY_NETWORK: Record<SuiNetwork, string> = {
 export const LEGACY_PACKAGE_IDS_BY_NETWORK: Record<SuiNetwork, string[]> = {
   testnet: ['0xe1a9d6bad3a9ca056336477f425f6a39a724789d26f2a82a8e8d767091ce9b51'],
   mainnet: [
+    '0xaf59474bc45c7712f35148aa429c52f3f07ca4e35286878cd807b336a9c6d48b',
     '0x0e412c83484ded8b5b2ddd1d19eac8dfe0270ae18944fc1c7ce9ecb7026a5a40',
     '0x160d4503e2377bfdca735aa757fe5df0d62817de010d1b34b901fa0f3ea7d6ec'
   ]

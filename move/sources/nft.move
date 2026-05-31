@@ -11,6 +11,9 @@ public struct NFT has key, store {
     image_blob_id: String,
     quilt_patch_id: String,
     file_name: String,
+    thumbnail_blob_id: String,
+    thumbnail_quilt_patch_id: String,
+    thumbnail_file_name: String,
     media_type: String,
     created_at: u64,
     file_hash: String,
@@ -26,6 +29,9 @@ public struct Minted has copy, drop {
     image_blob_id: String,
     quilt_patch_id: String,
     file_name: String,
+    thumbnail_blob_id: String,
+    thumbnail_quilt_patch_id: String,
+    thumbnail_file_name: String,
     media_type: String,
     file_hash: String,
     created_at: u64,
@@ -45,6 +51,9 @@ entry fun mint(
     image_blob_id: vector<u8>,
     quilt_patch_id: vector<u8>,
     file_name: vector<u8>,
+    thumbnail_blob_id: vector<u8>,
+    thumbnail_quilt_patch_id: vector<u8>,
+    thumbnail_file_name: vector<u8>,
     media_type: vector<u8>,
     file_hash: vector<u8>,
     clock: &Clock,
@@ -58,6 +67,9 @@ entry fun mint(
         image_blob_id: string::utf8(image_blob_id),
         quilt_patch_id: string::utf8(quilt_patch_id),
         file_name: string::utf8(file_name),
+        thumbnail_blob_id: string::utf8(thumbnail_blob_id),
+        thumbnail_quilt_patch_id: string::utf8(thumbnail_quilt_patch_id),
+        thumbnail_file_name: string::utf8(thumbnail_file_name),
         media_type: string::utf8(media_type),
         created_at,
         file_hash: string::utf8(file_hash),
@@ -71,6 +83,9 @@ entry fun mint(
         image_blob_id: nft.image_blob_id,
         quilt_patch_id: nft.quilt_patch_id,
         file_name: nft.file_name,
+        thumbnail_blob_id: nft.thumbnail_blob_id,
+        thumbnail_quilt_patch_id: nft.thumbnail_quilt_patch_id,
+        thumbnail_file_name: nft.thumbnail_file_name,
         media_type: nft.media_type,
         file_hash: nft.file_hash,
         created_at,
@@ -105,6 +120,18 @@ public fun quilt_patch_id(nft: &NFT): &String {
 
 public fun file_name(nft: &NFT): &String {
     &nft.file_name
+}
+
+public fun thumbnail_blob_id(nft: &NFT): &String {
+    &nft.thumbnail_blob_id
+}
+
+public fun thumbnail_quilt_patch_id(nft: &NFT): &String {
+    &nft.thumbnail_quilt_patch_id
+}
+
+public fun thumbnail_file_name(nft: &NFT): &String {
+    &nft.thumbnail_file_name
 }
 
 public fun created_at(nft: &NFT): u64 {
