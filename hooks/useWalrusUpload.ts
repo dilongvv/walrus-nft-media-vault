@@ -16,6 +16,16 @@ const initialProgress: UploadProgress = {
   message: 'Ready'
 };
 
+interface StoredWalrusFileReference {
+  id: string;
+  blobId: string;
+}
+
+interface ResolvedStoredFileReferences {
+  media: StoredWalrusFileReference;
+  thumbnail: StoredWalrusFileReference;
+}
+
 export function useWalrusUpload() {
   const account = useCurrentAccount();
   const { network } = useWalletNetwork();
@@ -67,34 +77,27 @@ export function useWalrusUpload() {
       const certifyResult = await signAndExecute(certifyTx);
       logDebug('walrus', 'certify transaction signed', certifyResult);
 
-      const [storedFile, storedPosterFile] = await flow.listFiles() as Array<{ blobId?: string; id?: string }>;
-      if (!storedFile) {
-        throw new Error('Walrus upload completed without a file reference.');
-      }
-
-      const blobId = storedFile.blobId;
-      if (!blobId) {
-        throw new Error('Walrus upload completed without a blob ID.');
-      }
-      const thumbnailFile = posterFile ? storedPosterFile : storedFile;
-      const thumbnailBlobId = thumbnailFile?.blobId;
-      if (!thumbnailBlobId) {
-        throw new Error('Walrus upload completed without a thumbnail blob ID.');
-      }
+      const fileReferences = await flow.listFiles();
+      const { media: storedFile, thumbnail: thumbnailFile } = await resolveStoredFileReferences({
+        references: fileReferences,
+        originalFile: file,
+        posterFile,
+        network
+      });
 
       const uploaded: UploadedMedia = {
-        blobId,
+        blobId: storedFile.blobId,
         quiltPatchId: storedFile.id,
         walrusUrl: getWalrusFileUrl({
-          blobId,
+          blobId: storedFile.blobId,
           quiltPatchId: storedFile.id,
           network
         }),
-        blobWalrusUrl: getWalrusBlobUrl(blobId, network),
-        thumbnailBlobId,
+        blobWalrusUrl: getWalrusBlobUrl(storedFile.blobId, network),
+        thumbnailBlobId: thumbnailFile.blobId,
         thumbnailQuiltPatchId: thumbnailFile.id,
         thumbnailWalrusUrl: getWalrusFileUrl({
-          blobId: thumbnailBlobId,
+          blobId: thumbnailFile.blobId,
           quiltPatchId: thumbnailFile.id,
           network
         }),
@@ -125,6 +128,97 @@ export function useWalrusUpload() {
     progress,
     reset
   };
+}
+
+async function resolveStoredFileReferences({
+  references,
+  originalFile,
+  posterFile,
+  network
+}: {
+  references: Array<{ id?: string; blobId?: string }>;
+  originalFile: File;
+  posterFile?: File;
+  network: ReturnType<typeof useWalletNetwork>['network'];
+}): Promise<ResolvedStoredFileReferences> {
+  const validReferences = references.filter(isStoredWalrusFileReference);
+  if (validReferences.length === 0) {
+    throw new Error('Walrus upload completed without file references.');
+  }
+
+  if (!posterFile) {
+    const [reference] = validReferences;
+    return { media: reference, thumbnail: reference };
+  }
+
+  const inspected = await Promise.all(
+    validReferences.map(async (reference) => ({
+      reference,
+      headers: await inspectWalrusPatch(reference, network)
+    }))
+  );
+
+  const media = inspected.find(({ headers }) => headers.contentType.startsWith(originalFile.type))
+    ?? inspected.find(({ headers }) => headers.identifier === originalFile.name)
+    ?? inspected.find(({ headers }) => headers.contentType.startsWith('video/'));
+
+  const thumbnail = inspected.find(({ headers }) => headers.contentType.startsWith('image/'))
+    ?? inspected.find(({ headers }) => headers.identifier === posterFile.name);
+
+  if (!media) {
+    throw new Error('Walrus upload completed, but the original video patch could not be identified.');
+  }
+
+  if (!thumbnail) {
+    throw new Error('Walrus upload completed, but the generated poster image patch could not be identified.');
+  }
+
+  if (media.reference.id === thumbnail.reference.id) {
+    throw new Error('Walrus upload returned the same patch for video and poster.');
+  }
+
+  logDebug('walrus', 'resolved quilt patches', {
+    media: media.headers,
+    thumbnail: thumbnail.headers
+  });
+
+  return {
+    media: media.reference,
+    thumbnail: thumbnail.reference
+  };
+}
+
+function isStoredWalrusFileReference(value: { id?: string; blobId?: string }): value is StoredWalrusFileReference {
+  return typeof value.id === 'string' && value.id.length > 0 && typeof value.blobId === 'string' && value.blobId.length > 0;
+}
+
+async function inspectWalrusPatch(reference: StoredWalrusFileReference, network: ReturnType<typeof useWalletNetwork>['network']): Promise<{ contentType: string; identifier: string | null }> {
+  const url = getWalrusFileUrl({
+    blobId: reference.blobId,
+    quiltPatchId: reference.id,
+    network
+  });
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      if (response.ok) {
+        return {
+          contentType: response.headers.get('content-type')?.toLowerCase() || '',
+          identifier: response.headers.get('x-quilt-patch-identifier')
+        };
+      }
+    } catch (error) {
+      logDebug('walrus', 'patch inspection failed', { attempt, url, error: normalizeError(error).message });
+    }
+    await delay(500 * (attempt + 1));
+  }
+
+  throw new Error('Walrus upload completed, but patch metadata could not be verified.');
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 async function createVideoPosterFile(file: File): Promise<File> {

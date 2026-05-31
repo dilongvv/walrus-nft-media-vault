@@ -121,7 +121,7 @@ The browser validates MIME type and size, calculates a SHA-256 hash, wraps the f
 5. wallet-signed `flow.certify()` prepared through GraphQL and executed through Sui Core API
 6. `flow.listFiles()` to obtain the Blob ID
 
-No application backend is used. For video uploads, the browser also extracts a JPEG poster frame and uploads it in the same Walrus quilt. The NFT stores both the original media patch and the thumbnail patch so wallets can index a real image while the dApp still opens the video.
+No application backend is used. For video uploads, the browser also extracts a JPEG poster frame and uploads it in the same Walrus quilt. After certification, the browser verifies each returned quilt patch by its Walrus `content-type` response header so the original video patch and poster image patch cannot be swapped. The NFT stores both references so wallets can index a real image while the dApp still opens the video.
 
 ## NFT Mint Flow
 
