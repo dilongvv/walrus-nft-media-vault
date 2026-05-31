@@ -55,7 +55,7 @@ export function NFTDetailClient({ objectId: providedObjectId }: { objectId?: str
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <section className="space-y-4">
               <h1 className="text-3xl font-black md:text-5xl">{data.name}</h1>
-              <MediaRenderer src={data.walrusUrl} mimeType={data.mediaType} kind={data.mediaKind} title={data.name} />
+              <MediaRenderer src={data.walrusUrl} posterSrc={data.thumbnailWalrusUrl} mimeType={data.mediaType} kind={data.mediaKind} title={data.name} />
             </section>
             <Card>
               <CardHeader>

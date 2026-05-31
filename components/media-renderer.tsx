@@ -10,8 +10,21 @@ const ModelViewer = dynamic(() => import('@/components/model-viewer').then((mod)
   loading: () => <Skeleton className="aspect-video w-full" />
 });
 
-export function MediaRenderer({ src, mimeType, kind, title }: { src: string; mimeType: string; kind: MediaKind; title: string }) {
+export function MediaRenderer({
+  src,
+  mimeType,
+  kind,
+  title,
+  posterSrc
+}: {
+  src: string;
+  mimeType: string;
+  kind: MediaKind;
+  title: string;
+  posterSrc?: string;
+}) {
   const cacheBustedSrc = useMemo(() => src, [src]);
+  const cacheBustedPosterSrc = useMemo(() => posterSrc, [posterSrc]);
 
   if (kind === 'image') {
     return (
@@ -23,7 +36,7 @@ export function MediaRenderer({ src, mimeType, kind, title }: { src: string; mim
   }
 
   if (kind === 'video') {
-    return <video src={cacheBustedSrc} controls autoPlay muted loop playsInline className="aspect-video w-full rounded-lg bg-black object-contain" />;
+    return <video src={cacheBustedSrc} poster={cacheBustedPosterSrc} controls preload="metadata" playsInline className="aspect-video w-full rounded-lg bg-black object-contain" />;
   }
 
   if (kind === 'audio') {

@@ -77,7 +77,7 @@ export function UploadZone({
 
         {uploaded ? (
           <div className="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4 text-sm">
-            <MediaRenderer src={uploaded.walrusUrl} mimeType={uploaded.mimeType} kind={uploaded.mediaKind} title={uploaded.fileName} />
+            <MediaRenderer src={uploaded.walrusUrl} posterSrc={uploaded.thumbnailWalrusUrl} mimeType={uploaded.mimeType} kind={uploaded.mediaKind} title={uploaded.fileName} />
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm" variant="secondary">
                 <a href={uploaded.walrusUrl} target="_blank" rel="noreferrer">
