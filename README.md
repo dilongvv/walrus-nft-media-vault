@@ -8,7 +8,7 @@ Walrus NFT Media Vault is a production-ready Sui + Walrus dApp for decentralized
 - `@mysten/dapp-kit`, `@mysten/sui`, `@mysten/walrus`, TanStack Query
 - Sui Core API data layer: GraphQL primary, gRPC fallback for reads and transaction execution
 - Walrus Upload Relay with `writeFilesFlow`
-- Sui Move owned-object NFT package
+- Sui Move owned-object NFT package with `Display<NFT>` metadata for wallet rendering
 - Static export for Walrus Sites and Vercel
 
 ## Project Structure
@@ -35,6 +35,7 @@ lib/
   walrus.ts
 move/
   Move.toml
+  sources/display.move
   sources/nft.move
 providers/
 public/ws-resources.json
@@ -131,6 +132,15 @@ After upload, the dApp builds a PTB with `Transaction` and calls:
 ```
 
 The hook builds the PTB with `Transaction`, resolves it against Sui GraphQL, asks the connected wallet to sign the resolved transaction JSON, executes the signed bytes through GraphQL with gRPC fallback, then extracts the created NFT object id from Core API effects.
+
+The current mainnet package registers Sui `Display<NFT>` metadata during publish:
+
+```text
+image_url = https://aggregator.walrus-mainnet.walrus.space/v1/blobs/by-quilt-patch-id/{quilt_patch_id}
+link      = https://walrus-nft-media-vault.vercel.app/nft/{id}
+```
+
+This keeps the dApp display path unchanged while giving wallets such as Slush a standard `image_url` field to index for newly minted NFTs.
 
 ## Sui Data Access
 
