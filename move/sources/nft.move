@@ -37,6 +37,15 @@ public struct Minted has copy, drop {
     created_at: u64,
 }
 
+public struct MediaRefsRepaired has copy, drop {
+    object_id: object::ID,
+    owner: address,
+    quilt_patch_id: String,
+    file_name: String,
+    thumbnail_quilt_patch_id: String,
+    thumbnail_file_name: String,
+}
+
 fun init(ctx: &mut tx_context::TxContext) {
     transfer::transfer(AdminCap { id: object::new(ctx) }, tx_context::sender(ctx));
 }
@@ -92,6 +101,30 @@ entry fun mint(
     });
 
     transfer::transfer(nft, owner);
+}
+
+#[allow(unused_mut_parameter)]
+entry fun repair_media_refs(
+    nft: &mut NFT,
+    quilt_patch_id: vector<u8>,
+    file_name: vector<u8>,
+    thumbnail_quilt_patch_id: vector<u8>,
+    thumbnail_file_name: vector<u8>,
+    ctx: &mut tx_context::TxContext,
+) {
+    nft.quilt_patch_id = string::utf8(quilt_patch_id);
+    nft.file_name = string::utf8(file_name);
+    nft.thumbnail_quilt_patch_id = string::utf8(thumbnail_quilt_patch_id);
+    nft.thumbnail_file_name = string::utf8(thumbnail_file_name);
+
+    event::emit(MediaRefsRepaired {
+        object_id: object::id(nft),
+        owner: tx_context::sender(ctx),
+        quilt_patch_id: nft.quilt_patch_id,
+        file_name: nft.file_name,
+        thumbnail_quilt_patch_id: nft.thumbnail_quilt_patch_id,
+        thumbnail_file_name: nft.thumbnail_file_name,
+    });
 }
 
 public fun id(nft: &NFT): object::ID {
